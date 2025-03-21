@@ -1,0 +1,144 @@
+#!/usr/bin/env ruby
+
+require "active_support"
+require "active_support/core_ext/numeric/bytes"
+require "opensearch/cli"
+require "uri"
+
+class IndexName
+  attr_reader :name
+
+  def initialize(index)
+    @name = index["index"]
+  end
+
+  def periodic?
+    base_name != name
+  end
+
+  def base_name
+    @base_name ||= name.gsub(/\d{4}\.\d{2}\.\d{2}$/, "YYYY.MM.dd")
+                       .gsub(/\d{4}\.\d{2}$/, "YYYY.MM")
+                       .gsub(/\d{4}$/, "YYYY")
+  end
+end
+
+class IndexGroupStats
+  def initialize
+    @sizes = []
+  end
+
+  def add(index)
+    # We assume size is spread evenly across all primary shards
+    @sizes << index["pri.store.size"].to_i / index["pri"].to_i
+  end
+
+  def count
+    @sizes.count
+  end
+
+  def min
+    @sizes.min
+  end
+
+  def max
+    @sizes.max
+  end
+
+  def median
+    @sizes.sort.at(count / 2)
+  end
+
+  def median_trend(n)
+    sample = @sizes.last(n)
+    sample.sort.at(sample.count / 2)
+  end
+end
+
+options = {
+  min_index_size: 10.gigabytes,
+  max_index_size: 50.gigabytes,
+}
+
+cli = OpenSearch::CLI.new do |opts|
+  opts.banner = "Usage: #{$PROGRAM_NAME} [options]"
+
+  opts.on("-p", "--profile=PROFILE", [:read, :write], "Select a workload profile (read, write)") do |profile|
+    if profile == :read
+      options[:min_index_size] = 10.gigabytes
+      options[:max_index_size] = 30.gigabytes
+    elsif profile == :write
+      options[:min_index_size] = 30.gigabytes
+      options[:max_index_size] = 50.gigabytes
+    end
+  end
+end
+
+cli.load
+cli.parse!
+
+index_param = ARGV.first || "_all"
+
+indices = cli.client.cat.indices(index: index_param, format: "json", bytes: "b", s: "index")
+
+all_indices_stats = Hash.new { |hash, key| hash[key] = IndexGroupStats.new }
+
+indices.each do |index|
+  name = IndexName.new(index)
+  next unless name.periodic?
+
+  all_indices_stats[name.base_name].add(index)
+end
+
+puts "Found indices:"
+all_indices_stats.each do |name, stats|
+  puts format("%<count>4d x %<name>-20s %<median>9s [min: %<min>9s max: %<max>9s, trend: %<trend14>9s, %<trend7>9s]\n",
+              count: stats.count,
+              name: name,
+              median: ActiveSupport::NumberHelper.number_to_human_size(stats.median),
+              min: ActiveSupport::NumberHelper.number_to_human_size(stats.min),
+              max: ActiveSupport::NumberHelper.number_to_human_size(stats.max),
+              trend14: ActiveSupport::NumberHelper.number_to_human_size(stats.median_trend(14)),
+              trend7: ActiveSupport::NumberHelper.number_to_human_size(stats.median_trend(7)))
+end
+
+# Check shard size
+# https://opensearch.org/blog/optimize-opensearch-index-shard-size/
+all_indices_stats.each do |name, stats|
+  if stats.median < options[:min_index_size]
+    warn format("Indices %<index>s are too small (%<size>s < %<ref>s).  Consider reducing the number of shards by index or merging indices.",
+                index: name,
+                size: ActiveSupport::NumberHelper.number_to_human_size(stats.median),
+                ref: ActiveSupport::NumberHelper.number_to_human_size(options[:min_index_size]))
+  elsif stats.median > options[:max_index_size]
+    warn format("Indices %<index>s are too big (%<size>s > %<ref>s).  Consider adding more shards by index.",
+              index: name,
+              size: ActiveSupport::NumberHelper.number_to_human_size(stats.median),
+              ref: ActiveSupport::NumberHelper.number_to_human_size(options[:max_index_size]))
+  end
+end
+
+def dynamic_mapping?(key = [], mapping)
+  return false unless mapping.is_a?(Hash)
+
+  result = false
+
+  if mapping["type"] == "keyword" && mapping["ignore_above"] == 256
+    warn "Field #{key.join(".")} looks like a dynamic field to me"
+    result = true
+  else
+    mapping.each do |k, v|
+      result = true if dynamic_mapping?(key + [k], v)
+    end
+  end
+
+  result
+end
+
+mappings = cli.client.indices.get_mapping(index: index_param)
+
+mappings.each do |index, mapping|
+  if dynamic_mapping?(mapping)
+    warn "Index #{index} seems to have dynamic mapping"
+  end
+end
