@@ -92,14 +92,18 @@ end
 
 puts "Found indices:"
 all_indices_stats.each do |name, stats|
-  puts format("%<count>4d x %<name>-20s %<median>9s [min: %<min>9s max: %<max>9s, trend: %<trend14>9s, %<trend7>9s]\n",
+  trends = [14, 7].map do |days|
+    format("%<trend>9s (%<days>d days)",
+           trend: ActiveSupport::NumberHelper.number_to_human_size(stats.median_trend(days)),
+           days: days)
+  end.join(', ')
+  puts format("%<count>4d x %<name>-20s %<median>9s [min: %<min>9s max: %<max>9s, trends: %<trends>s]\n",
               count: stats.count,
               name: name,
               median: ActiveSupport::NumberHelper.number_to_human_size(stats.median),
               min: ActiveSupport::NumberHelper.number_to_human_size(stats.min),
               max: ActiveSupport::NumberHelper.number_to_human_size(stats.max),
-              trend14: ActiveSupport::NumberHelper.number_to_human_size(stats.median_trend(14)),
-              trend7: ActiveSupport::NumberHelper.number_to_human_size(stats.median_trend(7)))
+              trends: trends)
 end
 
 # Check shard size
