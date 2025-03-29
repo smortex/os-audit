@@ -1,8 +1,8 @@
 source "https://rubygems.org"
 
-gem "activesupport"
-gem "opensearch-ruby-cli"
+gemspec
 
 group :test do
+  gem "rspec"
   gem "standard"
 end

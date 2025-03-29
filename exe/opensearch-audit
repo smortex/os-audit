@@ -2,58 +2,8 @@
 
 require "active_support"
 require "active_support/core_ext/numeric/bytes"
+require "opensearch/audit"
 require "opensearch/cli"
-require "uri"
-
-class IndexName
-  attr_reader :name
-
-  def initialize(index)
-    @name = index["index"]
-  end
-
-  def periodic?
-    base_name != name
-  end
-
-  def base_name
-    @base_name ||= name.gsub(/\d{4}\.\d{2}\.\d{2}$/, "YYYY.MM.dd")
-                       .gsub(/\d{4}\.\d{2}$/, "YYYY.MM")
-                       .gsub(/\d{4}$/, "YYYY")
-  end
-end
-
-class IndexGroupStats
-  def initialize
-    @sizes = []
-  end
-
-  def add(index)
-    # We assume size is spread evenly across all primary shards
-    @sizes << index["pri.store.size"].to_i / index["pri"].to_i
-  end
-
-  def count
-    @sizes.count
-  end
-
-  def min
-    @sizes.min
-  end
-
-  def max
-    @sizes.max
-  end
-
-  def median
-    @sizes.sort.at(count / 2)
-  end
-
-  def median_trend(n)
-    sample = @sizes.last(n)
-    sample.sort.at(sample.count / 2)
-  end
-end
 
 options = {
   min_index_size: 10.gigabytes,
@@ -81,10 +31,10 @@ index_param = ARGV.first || "_all"
 
 indices = cli.client.cat.indices(index: index_param, format: "json", bytes: "b", s: "index")
 
-all_indices_stats = Hash.new { |hash, key| hash[key] = IndexGroupStats.new }
+all_indices_stats = Hash.new { |hash, key| hash[key] = OpenSearch::Audit::IndexGroup.new }
 
 indices.each do |index|
-  name = IndexName.new(index)
+  name = OpenSearch::Audit::IndexName.new(index)
   next unless name.periodic?
 
   all_indices_stats[name.base_name].add(index)
