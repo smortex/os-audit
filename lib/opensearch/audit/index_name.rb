@@ -9,8 +9,8 @@ module OpenSearch
 
       def base_name
         name.gsub(/\d{4}\.\d{2}\.\d{2}$/, "YYYY.MM.dd")
-            .gsub(/\d{4}\.\d{2}$/, "YYYY.MM")
-            .gsub(/\d{4}$/, "YYYY")
+          .gsub(/\d{4}\.\d{2}$/, "YYYY.MM")
+          .gsub(/\d{4}$/, "YYYY")
       end
 
       def periodic?

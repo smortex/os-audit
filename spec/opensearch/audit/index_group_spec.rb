@@ -20,24 +20,24 @@ RSpec.describe OpenSearch::Audit::IndexGroup do
   describe "#min" do
     subject { index_group.min }
 
-    it { is_expected.to eq(1_000_000)}
+    it { is_expected.to eq(1_000_000) }
   end
 
   describe "#max" do
     subject { index_group.max }
 
-    it { is_expected.to eq(5_000_000)}
+    it { is_expected.to eq(5_000_000) }
   end
 
   describe "#median" do
     subject { index_group.median }
 
-    it { is_expected.to eq(3_000_000)}
+    it { is_expected.to eq(3_000_000) }
   end
 
   describe "#median_trend" do
     subject { index_group.median_trend(3) }
 
-    it { is_expected.to eq(4_000_000)}
+    it { is_expected.to eq(4_000_000) }
   end
 end

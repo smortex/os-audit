@@ -7,7 +7,7 @@ require "opensearch/cli"
 
 options = {
   min_index_size: 10.gigabytes,
-  max_index_size: 50.gigabytes,
+  max_index_size: 50.gigabytes
 }
 
 cli = OpenSearch::CLI.new do |opts|
@@ -44,16 +44,16 @@ puts "Found indices:"
 all_indices_stats.each do |name, stats|
   trends = [14, 7].map do |days|
     format("%<trend>9s (%<days>d days)",
-           trend: ActiveSupport::NumberHelper.number_to_human_size(stats.median_trend(days)),
-           days: days)
-  end.join(', ')
+      trend: ActiveSupport::NumberHelper.number_to_human_size(stats.median_trend(days)),
+      days: days)
+  end.join(", ")
   puts format("%<count>4d x %<name>-20s %<median>9s [min: %<min>9s max: %<max>9s, trends: %<trends>s]\n",
-              count: stats.count,
-              name: name,
-              median: ActiveSupport::NumberHelper.number_to_human_size(stats.median),
-              min: ActiveSupport::NumberHelper.number_to_human_size(stats.min),
-              max: ActiveSupport::NumberHelper.number_to_human_size(stats.max),
-              trends: trends)
+    count: stats.count,
+    name: name,
+    median: ActiveSupport::NumberHelper.number_to_human_size(stats.median),
+    min: ActiveSupport::NumberHelper.number_to_human_size(stats.min),
+    max: ActiveSupport::NumberHelper.number_to_human_size(stats.max),
+    trends: trends)
 end
 
 # Check shard size
@@ -61,18 +61,18 @@ end
 all_indices_stats.each do |name, stats|
   if stats.median < options[:min_index_size]
     warn format("Indices %<index>s are too small (%<size>s < %<ref>s).  Consider reducing the number of shards by index or merging indices.",
-                index: name,
-                size: ActiveSupport::NumberHelper.number_to_human_size(stats.median),
-                ref: ActiveSupport::NumberHelper.number_to_human_size(options[:min_index_size]))
+      index: name,
+      size: ActiveSupport::NumberHelper.number_to_human_size(stats.median),
+      ref: ActiveSupport::NumberHelper.number_to_human_size(options[:min_index_size]))
   elsif stats.median > options[:max_index_size]
     warn format("Indices %<index>s are too big (%<size>s > %<ref>s).  Consider adding more shards by index.",
-              index: name,
-              size: ActiveSupport::NumberHelper.number_to_human_size(stats.median),
-              ref: ActiveSupport::NumberHelper.number_to_human_size(options[:max_index_size]))
+      index: name,
+      size: ActiveSupport::NumberHelper.number_to_human_size(stats.median),
+      ref: ActiveSupport::NumberHelper.number_to_human_size(options[:max_index_size]))
   end
 end
 
-def dynamic_mapping?(key = [], mapping)
+def dynamic_mapping?(mapping, key: [])
   return false unless mapping.is_a?(Hash)
 
   result = false
@@ -82,7 +82,7 @@ def dynamic_mapping?(key = [], mapping)
     result = true
   else
     mapping.each do |k, v|
-      result = true if dynamic_mapping?(key + [k], v)
+      result = true if dynamic_mapping?(v, key: key + [k])
     end
   end
 
