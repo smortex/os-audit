@@ -8,6 +8,10 @@ module OpenSearch
           @index_list = index_list
           @options = options
         end
+
+        def logger
+          @options[:logger]
+        end
       end
     end
   end

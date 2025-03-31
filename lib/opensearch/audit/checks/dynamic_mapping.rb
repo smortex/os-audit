@@ -7,7 +7,7 @@ module OpenSearch
           @index_list.each do |_group_name, indices|
             indices.each do |index|
               if dynamic_mapping?(index.mapping)
-                warn "Index #{index.name} seems to have dynamic mapping"
+                logger.warn "Index #{index.name} seems to have dynamic mapping"
               end
             end
           end
@@ -19,7 +19,7 @@ module OpenSearch
           result = false
 
           if mapping["type"] == "keyword" && mapping["ignore_above"] == 256
-            warn "Field #{key.join(".")} looks like a dynamic field to me"
+            logger.info "Field #{key.reject { |v| v == "properties" }.join(".")} looks like a dynamic field to me"
             result = true
           else
             mapping.each do |k, v|

@@ -2,10 +2,15 @@
 
 require "active_support"
 require "active_support/core_ext/numeric/bytes"
+require "logger"
 require "opensearch/audit"
 require "opensearch/cli"
 
+logger = Logger.new($stdout)
+logger.level = Logger::WARN
+
 options = {
+  logger: logger,
   min_index_size: 10.gigabytes,
   max_index_size: 50.gigabytes
 }
