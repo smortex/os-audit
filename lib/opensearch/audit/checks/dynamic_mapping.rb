@@ -6,24 +6,24 @@ module OpenSearch
         def check
           @index_list.each do |_group_name, indices|
             indices.each do |index|
-              if dynamic_mapping?(index.mapping)
-                logger.warn "Index #{index.name} seems to have dynamic mapping"
+              if (offenses = dynamic_mappings_count(index.mapping))
+                logger.warn "Index #{index.name} seems to have #{offenses} dynamic mappings"
               end
             end
           end
         end
 
-        def dynamic_mapping?(mapping, key: [])
-          return false unless mapping.is_a?(Hash)
+        def dynamic_mappings_count(mapping, key: [])
+          return 0 unless mapping.is_a?(Hash)
 
-          result = false
+          result = 0
 
-          if mapping["type"] == "keyword" && mapping["ignore_above"] == 256
+          if mapping["fields"] == {"keyword" => {"type" => "keyword", "ignore_above" => 256}}
             logger.info "Field #{key.reject { |v| v == "properties" }.join(".")} looks like a dynamic field to me"
-            result = true
+            result += 1
           else
             mapping.each do |k, v|
-              result = true if dynamic_mapping?(v, key: key + [k])
+              result += dynamic_mappings_count(v, key: key + [k])
             end
           end
 
