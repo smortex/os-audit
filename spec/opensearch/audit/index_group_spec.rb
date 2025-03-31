@@ -1,4 +1,4 @@
-require "opensearch/audit/index_group"
+require "spec_helper"
 
 RSpec.describe OpenSearch::Audit::IndexGroup do
   subject(:index_group) do

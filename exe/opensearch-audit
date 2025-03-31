@@ -29,70 +29,40 @@ cli.parse!
 
 index_param = ARGV.first || "_all"
 
-indices = cli.client.cat.indices(index: index_param, format: "json", bytes: "b", s: "index")
+indices_data = cli.client.cat.indices(index: index_param, format: "json", bytes: "b", s: "index")
 
-all_indices_stats = Hash.new { |hash, key| hash[key] = OpenSearch::Audit::IndexGroup.new }
+grouped_indices = OpenSearch::Audit::IndexList.new
 
-indices.each do |index|
-  name = OpenSearch::Audit::IndexName.new(index)
-  next unless name.periodic?
+indices_data.each do |index_data|
+  index = OpenSearch::Audit::Index.new(index_data)
+  next unless index.periodic?
 
-  all_indices_stats[name.base_name].add(index)
+  grouped_indices.add(index)
 end
 
 puts "Found indices:"
-all_indices_stats.each do |name, stats|
+grouped_indices.each do |group_name, group_indices|
   trends = [14, 7].map do |days|
     format("%<trend>9s (%<days>d days)",
-      trend: ActiveSupport::NumberHelper.number_to_human_size(stats.median_trend(days)),
+      trend: ActiveSupport::NumberHelper.number_to_human_size(group_indices.median_trend(days)),
       days: days)
   end.join(", ")
   puts format("%<count>4d x %<name>-20s %<median>9s [min: %<min>9s max: %<max>9s, trends: %<trends>s]\n",
-    count: stats.count,
-    name: name,
-    median: ActiveSupport::NumberHelper.number_to_human_size(stats.median),
-    min: ActiveSupport::NumberHelper.number_to_human_size(stats.min),
-    max: ActiveSupport::NumberHelper.number_to_human_size(stats.max),
+    count: group_indices.count,
+    name: group_name,
+    median: ActiveSupport::NumberHelper.number_to_human_size(group_indices.median),
+    min: ActiveSupport::NumberHelper.number_to_human_size(group_indices.min),
+    max: ActiveSupport::NumberHelper.number_to_human_size(group_indices.max),
     trends: trends)
 end
 
-# Check shard size
-# https://opensearch.org/blog/optimize-opensearch-index-shard-size/
-all_indices_stats.each do |name, stats|
-  if stats.median < options[:min_index_size]
-    warn format("Indices %<index>s are too small (%<size>s < %<ref>s).  Consider reducing the number of shards by index or merging indices.",
-      index: name,
-      size: ActiveSupport::NumberHelper.number_to_human_size(stats.median),
-      ref: ActiveSupport::NumberHelper.number_to_human_size(options[:min_index_size]))
-  elsif stats.median > options[:max_index_size]
-    warn format("Indices %<index>s are too big (%<size>s > %<ref>s).  Consider adding more shards by index.",
-      index: name,
-      size: ActiveSupport::NumberHelper.number_to_human_size(stats.median),
-      ref: ActiveSupport::NumberHelper.number_to_human_size(options[:max_index_size]))
-  end
-end
-
-def dynamic_mapping?(mapping, key: [])
-  return false unless mapping.is_a?(Hash)
-
-  result = false
-
-  if mapping["type"] == "keyword" && mapping["ignore_above"] == 256
-    warn "Field #{key.join(".")} looks like a dynamic field to me"
-    result = true
-  else
-    mapping.each do |k, v|
-      result = true if dynamic_mapping?(v, key: key + [k])
-    end
-  end
-
-  result
-end
+checker = OpenSearch::Audit::Checks::ShardSize.new(grouped_indices, options)
+checker.check
 
 mappings = cli.client.indices.get_mapping(index: index_param)
-
 mappings.each do |index, mapping|
-  if dynamic_mapping?(mapping)
-    warn "Index #{index} seems to have dynamic mapping"
-  end
+  grouped_indices.enrich(index, :mapping, mapping)
 end
+
+checker = OpenSearch::Audit::Checks::DynamicMapping.new(grouped_indices, options)
+checker.check
