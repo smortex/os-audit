@@ -11,12 +11,30 @@ module OpenSearch
 
             group_indices.each do |index|
               new_merge = merged_mapping.deep_merge(index.mapping)
-              if new_merge != merged_mapping
-                logger.warn "Conflicts detected for #{group_name}"
-                break
+              offenses = diff(merged_mapping, new_merge)
+              if offenses.any?
+                logger.warn "#{offenses.count} conflicts detected in group #{group_name}"
+                offenses.each { |conflict| logger.info "\t#{conflict}" }
               end
             end
           end
+        end
+
+        def diff(left, right, path: [])
+          result = []
+
+          if left != right
+            if left.is_a?(Hash) && right.is_a?(Hash)
+              keys = (left.keys + right.keys).uniq
+              keys.each do |key|
+                result += diff(left[key], right[key], path: path + [key])
+              end
+            else
+              result << "#{path.join(".")}: #{left.inspect} != #{right.inspect}"
+            end
+          end
+
+          result
         end
       end
     end
