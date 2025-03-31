@@ -71,3 +71,6 @@ end
 
 checker = OpenSearch::Audit::Checks::DynamicMapping.new(grouped_indices, options)
 checker.check
+
+checker = OpenSearch::Audit::Checks::Conflicts.new(grouped_indices, options)
+checker.check
