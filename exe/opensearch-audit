@@ -16,7 +16,17 @@ options = {
 }
 
 cli = OpenSearch::CLI.new do |opts|
-  opts.banner = "Usage: #{$PROGRAM_NAME} [options]"
+  opts.banner = "Usage: #{$PROGRAM_NAME} [options] [indices]"
+
+  opts.separator ""
+  opts.separator "Logging options:"
+
+  opts.on("--log-level=LEVEL", [:debug, :info, :warn, :error, :fatal], "Set the log level for the output") do |level|
+    options[:logger].level = level
+  end
+
+  opts.separator ""
+  opts.separator "Shard size options:"
 
   opts.on("-p", "--profile=PROFILE", [:read, :write], "Select a workload profile (read, write)") do |profile|
     if profile == :read
