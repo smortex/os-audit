@@ -40,7 +40,12 @@ module OpenSearch
       end
 
       def median
-        sizes.sort.at(count / 2)
+        if count.even?
+          pos = count / 2
+          sizes.sort[pos-1..pos].sum / 2
+        else
+          sizes.sort.at(count / 2)
+        end
       end
 
       def median_trend(n)
