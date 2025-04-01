@@ -62,7 +62,7 @@ grouped_indices.each do |group_name, group_indices|
       trend: ActiveSupport::NumberHelper.number_to_human_size(group_indices.median_trend(days)),
       days: days)
   end.join(", ")
-  puts format("%<count>4d x %<name>-20s %<median>9s [min: %<min>9s max: %<max>9s, trends: %<trends>s]\n",
+  puts format("%<count>4d x %<name>-#{grouped_indices.longest_index_name}s %<median>9s [min: %<min>9s max: %<max>9s, trends: %<trends>s]\n",
     count: group_indices.count,
     name: group_name,
     median: ActiveSupport::NumberHelper.number_to_human_size(group_indices.median),
