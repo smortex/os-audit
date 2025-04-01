@@ -8,18 +8,18 @@ RSpec.describe OpenSearch::Audit::Checks::Conflicts do
 
     let(:left) do
       {
-        "foo": "bar",
-        "bar": {
-          baz: "qux"
+        "foo" => "bar",
+        "bar" => {
+          "baz" => "qux"
         }
       }
     end
     let(:right) do
       {
-        "foo": "baz",
-        "bar": {
-          baz: "qux",
-          qux: "qux"
+        "foo" => "baz",
+        "bar" => {
+          "baz" => "qux",
+          "qux" => "qux"
         }
       }
     end
