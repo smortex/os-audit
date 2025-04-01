@@ -4,16 +4,16 @@ module OpenSearch
       class Conflicts < Base
         def check
           @index_list.each do |group_name, group_indices|
-            merged_mapping = {}
+            common_mapping = {}
             group_indices.each do |index|
-              merged_mapping.deep_merge!(index.mapping)
+              common_mapping.deep_merge!(index.mapping)
             end
 
             group_indices.each do |index|
-              new_merge = merged_mapping.deep_merge(index.mapping)
-              offenses = diff(merged_mapping, new_merge)
+              index_mapping = common_mapping.deep_merge(index.mapping)
+              offenses = diff(common_mapping, index_mapping)
               if offenses.any?
-                logger.warn "#{offenses.count} conflicts detected in group #{group_name}"
+                logger.warn "#{offenses.count} conflicts detected in group #{group_name} for index #{index.name}"
                 offenses.each { |conflict| logger.info "\t#{conflict}" }
               end
             end
@@ -30,7 +30,7 @@ module OpenSearch
                 result += diff(left[key], right[key], path: path + [key])
               end
             else
-              result << "#{path.join(".")}: #{left.inspect} != #{right.inspect}"
+              result << "#{path.join(".")}: #{left.inspect} (last) != #{right.inspect} (current)"
             end
           end
 
