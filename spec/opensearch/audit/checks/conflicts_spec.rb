@@ -25,7 +25,7 @@ RSpec.describe OpenSearch::Audit::Checks::Conflicts do
     end
 
     it do
-      is_expected.to eq([%(foo: "bar" != "baz"), %(bar.qux: nil != "qux")])
+      is_expected.to eq([%(foo: "bar" (last) != "baz" (current)), %(bar.qux: nil (last) != "qux" (current))])
     end
   end
 end
