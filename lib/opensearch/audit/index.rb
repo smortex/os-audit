@@ -21,9 +21,13 @@ module OpenSearch
       end
 
       def self.group_name(name)
-        name.gsub(/\d{4}\.\d{2}\.\d{2}$/, "YYYY.MM.dd")
-          .gsub(/\d{4}\.\d{2}$/, "YYYY.MM")
-          .gsub(/\d{4}$/, "YYYY")
+        name.sub(/-(?<year>\d{4})(?:(?<date_separator>[.-])(?<month>\d{2})(?:\k<date_separator>(?<day>\d{2}))?)?(?<stream_id>-\d{5,})?\Z/) do |match|
+          res = "-YYYY"
+          res << "#{Regexp.last_match(:date_separator)}MM" if Regexp.last_match(:month)
+          res << "#{Regexp.last_match(:date_separator)}dd" if Regexp.last_match(:day)
+          res << "-#{"N" * (Regexp.last_match(:stream_id).length - 1)}" if Regexp.last_match(:stream_id)
+          res
+        end
       end
 
       def group_name
