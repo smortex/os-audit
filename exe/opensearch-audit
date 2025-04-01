@@ -87,3 +87,6 @@ checker.check
 
 checker = OpenSearch::Audit::Checks::DoubleKeyword.new(grouped_indices, options)
 checker.check
+
+checker = OpenSearch::Audit::Checks::UnexpectedType.new(grouped_indices, options)
+checker.check
