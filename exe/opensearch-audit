@@ -79,6 +79,9 @@ end
 checker = OpenSearch::Audit::Checks::ShardSize.new(grouped_indices, options)
 checker.check
 
+checker = OpenSearch::Audit::Checks::IndexName.new(grouped_indices, options)
+checker.check
+
 mappings = cli.client.indices.get_mapping(index: index_param)
 mappings.each do |index, mapping|
   grouped_indices.enrich(index, :mapping, mapping)
