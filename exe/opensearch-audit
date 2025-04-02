@@ -11,6 +11,7 @@ logger.level = Logger::WARN
 
 options = {
   logger: logger,
+  periodic: false,
   min_index_size: 10.gigabytes,
   max_index_size: 50.gigabytes
 }
@@ -37,6 +38,10 @@ cli = OpenSearch::CLI.new do |opts|
       options[:max_index_size] = 50.gigabytes
     end
   end
+
+  opts.on("--[no-]periodic", "Only consider periodic indices") do |periodic|
+    options[:periodic] = periodic
+  end
 end
 
 cli.load
@@ -50,7 +55,7 @@ grouped_indices = OpenSearch::Audit::IndexList.new
 
 indices_data.each do |index_data|
   index = OpenSearch::Audit::Index.new(index_data)
-  next unless index.periodic?
+  next if options[:periodic] && !index.periodic?
 
   grouped_indices.add(index)
 end
