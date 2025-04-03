@@ -10,6 +10,7 @@ RSpec.describe OpenSearch::Audit::Index do
       "dej418" => "dej418",
       "logs-2025-03-21" => "logs-YYYY-MM-dd",
       "logs-2025.03.21" => "logs-YYYY.MM.dd",
+      "logs-2025.03.21.12" => "logs-YYYY.MM.dd.HH",
       "top_queries-2025.04.01-51422" => "top_queries-YYYY.MM.dd-NNNNN"
     }.each do |index_name, expected_group_name|
       describe "with index #{index_name}" do
