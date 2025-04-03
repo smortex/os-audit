@@ -12,8 +12,8 @@ logger.level = Logger::WARN
 options = {
   logger: logger,
   periodic: false,
-  min_index_size: 10.gigabytes,
-  max_index_size: 50.gigabytes
+  min_shard_size: 10.gigabytes,
+  max_shard_size: 50.gigabytes
 }
 
 cli = OpenSearch::CLI.new do |opts|
@@ -38,11 +38,11 @@ cli = OpenSearch::CLI.new do |opts|
 
   opts.on("-p", "--profile=PROFILE", [:read, :write], "Select a workload profile (read, write)") do |profile|
     if profile == :read
-      options[:min_index_size] = 10.gigabytes
-      options[:max_index_size] = 30.gigabytes
+      options[:min_shard_size] = 10.gigabytes
+      options[:max_shard_size] = 30.gigabytes
     elsif profile == :write
-      options[:min_index_size] = 30.gigabytes
-      options[:max_index_size] = 50.gigabytes
+      options[:min_shard_size] = 30.gigabytes
+      options[:max_shard_size] = 50.gigabytes
     end
   end
 end
