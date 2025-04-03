@@ -20,6 +20,13 @@ cli = OpenSearch::CLI.new do |opts|
   opts.banner = "Usage: #{$PROGRAM_NAME} [options] [indices]"
 
   opts.separator ""
+  opts.separator "Indices scope options:"
+
+  opts.on("--[no-]periodic", "Only consider periodic indices") do |periodic|
+    options[:periodic] = periodic
+  end
+
+  opts.separator ""
   opts.separator "Logging options:"
 
   opts.on("--log-level=LEVEL", [:debug, :info, :warn, :error, :fatal], "Set the log level for the output") do |level|
@@ -37,10 +44,6 @@ cli = OpenSearch::CLI.new do |opts|
       options[:min_index_size] = 30.gigabytes
       options[:max_index_size] = 50.gigabytes
     end
-  end
-
-  opts.on("--[no-]periodic", "Only consider periodic indices") do |periodic|
-    options[:periodic] = periodic
   end
 end
 
