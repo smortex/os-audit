@@ -64,15 +64,15 @@ puts "Found indices:"
 grouped_indices.each do |group_name, group_indices|
   trends = [14, 7].map do |days|
     format("%<trend>9s (%<days>d days)",
-      trend: ActiveSupport::NumberHelper.number_to_human_size(group_indices.median_trend(days)),
+      trend: ActiveSupport::NumberHelper.number_to_human_size(group_indices.median_shard_size_trend(days)),
       days: days)
   end.join(", ")
   puts format("%<count>4d x %<name>-#{grouped_indices.longest_index_name}s %<median>9s [min: %<min>9s max: %<max>9s, trends: %<trends>s]\n",
     count: group_indices.count,
     name: group_name,
-    median: ActiveSupport::NumberHelper.number_to_human_size(group_indices.median),
-    min: ActiveSupport::NumberHelper.number_to_human_size(group_indices.min),
-    max: ActiveSupport::NumberHelper.number_to_human_size(group_indices.max),
+    median: ActiveSupport::NumberHelper.number_to_human_size(group_indices.median_shard_size),
+    min: ActiveSupport::NumberHelper.number_to_human_size(group_indices.min_shard_size),
+    max: ActiveSupport::NumberHelper.number_to_human_size(group_indices.max_shard_size),
     trends: trends)
 end
 

@@ -1,13 +1,13 @@
 module OpenSearch
   module Audit
     class Index
-      attr_reader :name, :size
+      attr_reader :name, :shard_size
 
       def initialize(index)
         @name = index["index"]
 
         # We assume size is spread evenly across all primary shards
-        @size = index["pri.store.size"].to_i / index["pri"].to_i
+        @shard_size = index["pri.store.size"].to_i / index["pri"].to_i
 
         @user_data = {}
       end

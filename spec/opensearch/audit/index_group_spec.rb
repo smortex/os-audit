@@ -18,19 +18,19 @@ RSpec.describe OpenSearch::Audit::IndexGroup do
   end
 
   describe "#min" do
-    subject { index_group.min }
+    subject { index_group.min_shard_size }
 
     it { is_expected.to eq(1_000_000) }
   end
 
   describe "#max" do
-    subject { index_group.max }
+    subject { index_group.max_shard_size }
 
     it { is_expected.to eq(5_000_000) }
   end
 
   describe "#median" do
-    subject { index_group.median }
+    subject { index_group.median_shard_size }
 
     it { is_expected.to eq(3_000_000) }
 
@@ -49,7 +49,7 @@ RSpec.describe OpenSearch::Audit::IndexGroup do
   end
 
   describe "#median_trend" do
-    subject { index_group.median_trend(3) }
+    subject { index_group.median_shard_size_trend(3) }
 
     it { is_expected.to eq(4_000_000) }
   end

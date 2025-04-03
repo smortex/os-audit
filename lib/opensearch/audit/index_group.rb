@@ -27,29 +27,29 @@ module OpenSearch
         end
       end
 
-      def sizes
-        @indices.map(&:size)
+      def shard_sizes
+        @indices.map(&:shard_size)
       end
 
-      def min
-        sizes.min
+      def min_shard_size
+        shard_sizes.min
       end
 
-      def max
-        sizes.max
+      def max_shard_size
+        shard_sizes.max
       end
 
-      def median
+      def median_shard_size
         if count.even?
           pos = count / 2
-          sizes.sort[(pos - 1)..pos].sum / 2
+          shard_sizes.sort[(pos - 1)..pos].sum / 2
         else
-          sizes.sort.at(count / 2)
+          shard_sizes.sort.at(count / 2)
         end
       end
 
-      def median_trend(n)
-        sample = sizes.last(n)
+      def median_shard_size_trend(n)
+        sample = shard_sizes.last(n)
         sample.sort.at(sample.count / 2)
       end
     end
