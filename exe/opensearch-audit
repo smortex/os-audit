@@ -16,6 +16,20 @@ options = {
   max_shard_size: 50.gigabytes
 }
 
+def parse_bytes(s)
+  s.upcase =~ /\A(\d+)([KMGT])?B?\z/
+  m = {
+    nil => 1,
+    "K" => 1.kilobyte,
+    "M" => 1.megabyte,
+    "G" => 1.gigabyte,
+    "T" => 1.terabyte
+  }
+  Integer(Regexp.last_match(1)) * m[Regexp.last_match(2)]
+rescue
+  raise StandardError, "invalid byte size: #{s.inspect}"
+end
+
 cli = OpenSearch::CLI.new do |opts|
   opts.banner = "Usage: #{$PROGRAM_NAME} [options] [indices]"
 
@@ -45,10 +59,23 @@ cli = OpenSearch::CLI.new do |opts|
       options[:max_shard_size] = 50.gigabytes
     end
   end
+
+  opts.on("--min-shard-size=SIZE", "Set the minimum size of shards") do |size|
+    options[:min_shard_size] = parse_bytes(size)
+  end
+
+  opts.on("--max-shard-size=SIZE", "Set the maximum size of shards") do |size|
+    options[:max_shard_size] = parse_bytes(size)
+  end
 end
 
 cli.load
 cli.parse!
+
+if options[:max_shard_size] < options[:min_shard_size]
+  logger.fatal("Maximum shard size (#{options[:max_shard_size]}) is less than minimum shard size (#{options[:min_shard_size]})")
+  exit 1
+end
 
 index_param = ARGV.first || "_all"
 
