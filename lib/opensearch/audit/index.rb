@@ -1,13 +1,15 @@
 module OpenSearch
   module Audit
     class Index
-      attr_reader :name, :shard_size
+      attr_reader :name, :shard_size, :primary_size, :pri
 
       def initialize(index)
         @name = index["index"]
+        @pri = index["pri"].to_i
+        @primary_size = index["pri.store.size"].to_i
 
         # We assume size is spread evenly across all primary shards
-        @shard_size = index["pri.store.size"].to_i / index["pri"].to_i
+        @shard_size = primary_size / pri
 
         @user_data = {}
       end
@@ -32,11 +34,27 @@ module OpenSearch
       end
 
       def group_name
-        self.class.group_name(name)
+        @group_name ||= self.class.group_name(name)
       end
 
       def periodic?
         group_name != name
+      end
+
+      def yearly?
+        name =~ /-\d{4}(-\d{5,})?\z/
+      end
+
+      def monthly?
+        name =~ /-\d{4}([.-])\d{2}(-\d{5,})?\z/
+      end
+
+      def daily?
+        name =~ /-\d{4}([.-])\d{2}\1\d{2}(-\d{5,})?\z/
+      end
+
+      def hourly?
+        name =~ /-\d{4}([.-])\d{2}\1\d{2}\1\d{2}(-\d{5,})?\z/
       end
 
       private def method_missing(name, *args)

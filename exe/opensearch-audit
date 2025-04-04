@@ -92,17 +92,19 @@ end
 
 puts "Found indices:"
 grouped_indices.each do |group_name, group_indices|
-  trends = [14, 7].map do |days|
-    format("%<trend>9s (%<days>d days)",
-      trend: ActiveSupport::NumberHelper.number_to_human_size(group_indices.median_shard_size_trend(days)),
-      days: days)
+  trends = [14, 7].map do |n|
+    format("%<trend>9s (last %<n>d)",
+      trend: ActiveSupport::NumberHelper.number_to_human_size(group_indices.median_shard_size_trend(n)),
+      n: n)
   end.join(", ")
-  puts format("%<count>4d x %<name>-#{grouped_indices.longest_index_name}s %<median>9s [min: %<min>9s max: %<max>9s, trends: %<trends>s]\n",
+  puts format("%<count>4d x %<name>-#{grouped_indices.longest_index_name}s %<median_primary_size>9s [primary shards: %<primary_shard_count>2d, min: %<min>9s max: %<max>9s, med: %<med>9s, trends: %<trends>s]\n",
     count: group_indices.count,
     name: group_name,
-    median: ActiveSupport::NumberHelper.number_to_human_size(group_indices.median_shard_size),
+    median_primary_size: ActiveSupport::NumberHelper.number_to_human_size(group_indices.median_primary_size),
+    primary_shard_count: group_indices.median_primary_shard_count,
     min: ActiveSupport::NumberHelper.number_to_human_size(group_indices.min_shard_size),
     max: ActiveSupport::NumberHelper.number_to_human_size(group_indices.max_shard_size),
+    med: ActiveSupport::NumberHelper.number_to_human_size(group_indices.median_shard_size),
     trends: trends)
 end
 
