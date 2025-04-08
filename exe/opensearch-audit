@@ -19,13 +19,16 @@ options = {
 }
 
 def parse_bytes(s)
-  s.upcase =~ /\A(\d+)([KMGT])?B?\z/
+  s.upcase =~ /\A(\d+)([KMGTPEZ])?B?\z/
   m = {
     nil => 1,
     "K" => 1.kilobyte,
     "M" => 1.megabyte,
     "G" => 1.gigabyte,
-    "T" => 1.terabyte
+    "T" => 1.terabyte,
+    "P" => 1.petabyte,
+    "E" => 1.exabyte,
+    "Z" => 1.zettabyte
   }
   Integer(Regexp.last_match(1)) * m[Regexp.last_match(2)]
 rescue
