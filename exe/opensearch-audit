@@ -10,6 +10,8 @@ logger = Logger.new($stdout)
 logger.level = Logger::WARN
 
 options = {
+  list_checks: false,
+  checks: [],
   logger: logger,
   periodic: false,
   min_shard_size: 10.gigabytes,
@@ -32,6 +34,19 @@ end
 
 cli = OpenSearch::CLI.new do |opts|
   opts.banner = "Usage: #{$PROGRAM_NAME} [options] [indices]"
+
+  opts.on("--list-checks", "List available checks") do
+    options[:list_checks] = true
+  end
+
+  opts.on("--checks=CHECKS", Array, "Only run the specified checks") do |checks|
+    options[:checks] = checks.map(&:to_sym)
+
+    extra_checks = options[:checks] - OpenSearch::Audit.available_checks
+    unless extra_checks.empty?
+      raise "Unknown checks: #{extra_checks.map(&:to_s).join(", ")}"
+    end
+  end
 
   opts.separator ""
   opts.separator "Indices scope options:"
@@ -72,6 +87,11 @@ end
 cli.load
 cli.parse!
 
+if options[:list_checks]
+  pp OpenSearch::Audit.available_checks
+  exit 0
+end
+
 if options[:max_shard_size] < options[:min_shard_size]
   logger.fatal("Maximum shard size (#{options[:max_shard_size]}) is less than minimum shard size (#{options[:min_shard_size]})")
   exit 1
@@ -108,25 +128,9 @@ index_list.group_names.each do |group_name|
     trends: trends)
 end
 
-checker = OpenSearch::Audit::Checks::ShardSize.new(index_list, options)
-checker.check
-
-checker = OpenSearch::Audit::Checks::IndexName.new(index_list, options)
-checker.check
-
 mappings = cli.client.indices.get_mapping(index: index_param)
 mappings.each do |index, mapping|
   index_list.enrich(index, :mapping, mapping)
 end
 
-checker = OpenSearch::Audit::Checks::DynamicMapping.new(index_list, options)
-checker.check
-
-checker = OpenSearch::Audit::Checks::Conflicts.new(index_list, options)
-checker.check
-
-checker = OpenSearch::Audit::Checks::DoubleKeyword.new(index_list, options)
-checker.check
-
-checker = OpenSearch::Audit::Checks::UnexpectedType.new(index_list, options)
-checker.check
+OpenSearch::Audit.run_enabled_checks(index_list, options)
