@@ -22,6 +22,14 @@ module OpenSearch
         @user_data.has_key?(name)
       end
 
+      def self.base_name(name)
+        name.sub(/-\d{4}(?:([.-])\d{2}(?:\1\d{2}(?:\1\d{2})?)?)?(?:-\d{5,})?\z/, "")
+      end
+
+      def base_name
+        @base_name ||= self.class.base_name(name)
+      end
+
       def self.group_name(name)
         name.sub(/-(?<year>\d{4})(?:(?<date_separator>[.-])(?<month>\d{2})(?:\k<date_separator>(?<day>\d{2})(?:\k<date_separator>(?<hour>\d{2}))?)?)?(?<stream_id>-\d{5,})?\Z/) do |match|
           res = "-YYYY"
@@ -38,7 +46,7 @@ module OpenSearch
       end
 
       def periodic?
-        group_name != name
+        base_name != name
       end
 
       def yearly?

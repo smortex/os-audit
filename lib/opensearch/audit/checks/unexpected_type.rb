@@ -25,14 +25,12 @@ module OpenSearch
         end
 
         def check
-          @index_list.each do |_group_name, indices|
-            indices.each do |index|
-              offenses = unexpected_types(index.mapping)
-              if offenses.any?
-                logger.warn "#{offenses.count} fields with unexpected types in #{index.name}"
-                offenses.each do |offense|
-                  logger.info "\t#{offense}"
-                end
+          @index_list.each do |index|
+            offenses = unexpected_types(index.mapping)
+            if offenses.any?
+              logger.warn "#{offenses.count} fields with unexpected types in #{index.name}"
+              offenses.each do |offense|
+                logger.info "\t#{offense}"
               end
             end
           end

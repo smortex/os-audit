@@ -4,14 +4,12 @@ module OpenSearch
       # Look for dynamic mapping in indices
       class DynamicMapping < Base
         def check
-          @index_list.each do |_group_name, indices|
-            indices.each do |index|
-              offenses = dynamic_mappings(index.mapping)
-              if offenses.any?
-                logger.warn "#{offenses.count} dynamic mappings detected in index #{index.name}"
-                offenses.each do |mapping|
-                  logger.info "\tField #{mapping} looks like a dynamic field to me"
-                end
+          @index_list.each do |index|
+            offenses = dynamic_mappings(index.mapping)
+            if offenses.any?
+              logger.warn "#{offenses.count} dynamic mappings detected in index #{index.name}"
+              offenses.each do |mapping|
+                logger.info "\tField #{mapping} looks like a dynamic field to me"
               end
             end
           end

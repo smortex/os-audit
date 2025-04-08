@@ -3,7 +3,9 @@ module OpenSearch
     module Checks
       class Conflicts < Base
         def check
-          @index_list.each do |group_name, group_indices|
+          @index_list.base_names.each do |base_name|
+            group_indices = IndexGroup.new(@index_list.where(base_name: base_name))
+
             common_mapping = {}
             group_indices.each do |index|
               common_mapping.deep_merge!(index.mapping)
@@ -13,7 +15,7 @@ module OpenSearch
               index_mapping = common_mapping.deep_merge(index.mapping)
               offenses = diff(common_mapping, index_mapping)
               if offenses.any?
-                logger.warn "#{offenses.count} conflicts detected in group #{group_name} for index #{index.name}"
+                logger.warn "#{offenses.count} conflicts detected in group #{base_name} for index #{index.name}"
                 offenses.each { |conflict| logger.info "\t#{conflict}" }
               end
             end

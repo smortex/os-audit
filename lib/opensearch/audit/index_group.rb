@@ -3,12 +3,8 @@ require "opensearch/audit/index"
 module OpenSearch
   module Audit
     class IndexGroup
-      def initialize
-        @indices = []
-      end
-
-      def add(index)
-        @indices << index
+      def initialize(indices)
+        @indices = indices
       end
 
       def count

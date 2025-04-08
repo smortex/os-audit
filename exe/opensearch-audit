@@ -79,25 +79,25 @@ end
 
 index_param = ARGV.first || "_all"
 
-indices_data = cli.client.cat.indices(index: index_param, format: "json", bytes: "b", s: "index")
+index_list = OpenSearch::Audit::IndexList.new
 
-grouped_indices = OpenSearch::Audit::IndexList.new
-
-indices_data.each do |index_data|
+cli.client.cat.indices(index: index_param, format: "json", bytes: "b", s: "index").map do |index_data|
   index = OpenSearch::Audit::Index.new(index_data)
   next if options[:periodic] && !index.periodic?
 
-  grouped_indices.add(index)
+  index_list.add(index)
 end
 
-puts "Found indices:"
-grouped_indices.each do |group_name, group_indices|
+puts "Found index groups:"
+index_list.group_names.each do |group_name|
+  group_indices = OpenSearch::Audit::IndexGroup.new(index_list.where(group_name: group_name))
+
   trends = [14, 7].map do |n|
     format("%<trend>9s (last %<n>d)",
       trend: ActiveSupport::NumberHelper.number_to_human_size(group_indices.median_shard_size_trend(n)),
       n: n)
   end.join(", ")
-  puts format("%<count>4d x %<name>-#{grouped_indices.longest_index_name}s %<median_primary_size>9s [primary shards: %<primary_shard_count>2d, min: %<min>9s max: %<max>9s, med: %<med>9s, trends: %<trends>s]\n",
+  puts format("%<count>4d x %<name>-#{index_list.longest_index_name}s %<median_primary_size>9s [primary shards: %<primary_shard_count>2d, min: %<min>9s max: %<max>9s, med: %<med>9s, trends: %<trends>s]\n",
     count: group_indices.count,
     name: group_name,
     median_primary_size: ActiveSupport::NumberHelper.number_to_human_size(group_indices.median_primary_size),
@@ -108,25 +108,25 @@ grouped_indices.each do |group_name, group_indices|
     trends: trends)
 end
 
-checker = OpenSearch::Audit::Checks::ShardSize.new(grouped_indices, options)
+checker = OpenSearch::Audit::Checks::ShardSize.new(index_list, options)
 checker.check
 
-checker = OpenSearch::Audit::Checks::IndexName.new(grouped_indices, options)
+checker = OpenSearch::Audit::Checks::IndexName.new(index_list, options)
 checker.check
 
 mappings = cli.client.indices.get_mapping(index: index_param)
 mappings.each do |index, mapping|
-  grouped_indices.enrich(index, :mapping, mapping)
+  index_list.find_by(name: index).enrich(:mapping, mapping)
 end
 
-checker = OpenSearch::Audit::Checks::DynamicMapping.new(grouped_indices, options)
+checker = OpenSearch::Audit::Checks::DynamicMapping.new(index_list, options)
 checker.check
 
-checker = OpenSearch::Audit::Checks::Conflicts.new(grouped_indices, options)
+checker = OpenSearch::Audit::Checks::Conflicts.new(index_list, options)
 checker.check
 
-checker = OpenSearch::Audit::Checks::DoubleKeyword.new(grouped_indices, options)
+checker = OpenSearch::Audit::Checks::DoubleKeyword.new(index_list, options)
 checker.check
 
-checker = OpenSearch::Audit::Checks::UnexpectedType.new(grouped_indices, options)
+checker = OpenSearch::Audit::Checks::UnexpectedType.new(index_list, options)
 checker.check

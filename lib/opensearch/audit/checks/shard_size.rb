@@ -3,7 +3,9 @@ module OpenSearch
     module Checks
       class ShardSize < Base
         def check
-          @index_list.each do |group_name, indices|
+          @index_list.group_names.each do |group_name|
+            indices = IndexGroup.new(@index_list.where(group_name: group_name))
+
             if indices.median_shard_size < options[:min_shard_size]
               logger.warn format("Shards in group %<group_name>s are too small (%<size>s < %<ref>s).  Consider reducing the number of shards per index or merging indices.",
                 group_name: group_name,

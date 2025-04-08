@@ -2,13 +2,13 @@ require "spec_helper"
 
 RSpec.describe OpenSearch::Audit::IndexGroup do
   let(:index_group) do
-    res = described_class.new
-    res.add(OpenSearch::Audit::Index.new({"index" => "logs-2025.01.01", "pri.store.size" => "1000000", "pri" => "1"}))
-    res.add(OpenSearch::Audit::Index.new({"index" => "logs-2025.01.02", "pri.store.size" => "2000000", "pri" => "1"}))
-    res.add(OpenSearch::Audit::Index.new({"index" => "logs-2025.01.03", "pri.store.size" => "3000000", "pri" => "1"}))
-    res.add(OpenSearch::Audit::Index.new({"index" => "logs-2025.01.04", "pri.store.size" => "4000000", "pri" => "1"}))
-    res.add(OpenSearch::Audit::Index.new({"index" => "logs-2025.01.05", "pri.store.size" => "5000000", "pri" => "1"}))
-    res
+    described_class.new([
+      OpenSearch::Audit::Index.new({"index" => "logs-2025.01.01", "pri.store.size" => "1000000", "pri" => "1"}),
+      OpenSearch::Audit::Index.new({"index" => "logs-2025.01.02", "pri.store.size" => "2000000", "pri" => "1"}),
+      OpenSearch::Audit::Index.new({"index" => "logs-2025.01.03", "pri.store.size" => "3000000", "pri" => "1"}),
+      OpenSearch::Audit::Index.new({"index" => "logs-2025.01.04", "pri.store.size" => "4000000", "pri" => "1"}),
+      OpenSearch::Audit::Index.new({"index" => "logs-2025.01.05", "pri.store.size" => "5000000", "pri" => "1"})
+    ])
   end
 
   describe "#count" do
@@ -36,12 +36,12 @@ RSpec.describe OpenSearch::Audit::IndexGroup do
 
     context "with an even number of indices" do
       let(:index_group) do
-        res = described_class.new
-        res.add(OpenSearch::Audit::Index.new({"index" => "logs-2025.01.01", "pri.store.size" => "1000000", "pri" => "1"}))
-        res.add(OpenSearch::Audit::Index.new({"index" => "logs-2025.01.02", "pri.store.size" => "2000000", "pri" => "1"}))
-        res.add(OpenSearch::Audit::Index.new({"index" => "logs-2025.01.03", "pri.store.size" => "3000000", "pri" => "1"}))
-        res.add(OpenSearch::Audit::Index.new({"index" => "logs-2025.01.04", "pri.store.size" => "4000000", "pri" => "1"}))
-        res
+        described_class.new([
+          OpenSearch::Audit::Index.new({"index" => "logs-2025.01.01", "pri.store.size" => "1000000", "pri" => "1"}),
+          OpenSearch::Audit::Index.new({"index" => "logs-2025.01.02", "pri.store.size" => "2000000", "pri" => "1"}),
+          OpenSearch::Audit::Index.new({"index" => "logs-2025.01.03", "pri.store.size" => "3000000", "pri" => "1"}),
+          OpenSearch::Audit::Index.new({"index" => "logs-2025.01.04", "pri.store.size" => "4000000", "pri" => "1"})
+        ])
       end
 
       it { is_expected.to eq(2_500_000) }
