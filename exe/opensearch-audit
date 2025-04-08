@@ -116,7 +116,7 @@ checker.check
 
 mappings = cli.client.indices.get_mapping(index: index_param)
 mappings.each do |index, mapping|
-  index_list.find_by(name: index).enrich(:mapping, mapping)
+  index_list.enrich(index, :mapping, mapping)
 end
 
 checker = OpenSearch::Audit::Checks::DynamicMapping.new(index_list, options)

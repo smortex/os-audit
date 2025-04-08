@@ -18,8 +18,7 @@ module OpenSearch
       end
 
       def enrich(index_name, type, user_data)
-        raise "todo"
-        # indiGg[Index.group_name(index_name)].enrich(index_name, type, user_data)
+        find_by(name: index_name).enrich(type, user_data)
       end
 
       def base_names
