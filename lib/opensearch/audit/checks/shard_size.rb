@@ -58,6 +58,8 @@ module OpenSearch
           min_shard = optimal_min_shard_count_for(size)
           max_shard = optimal_max_shard_count_for(size)
 
+          return if max_shard.zero?
+
           logger.warn format("\tOptimal number of shards for %<median_shard_size>s indices: %<min>d (%<min_shard_shard_size>s per shard, < %<max_shard_size>s) to %<max>d (%<max_shard_shard_size>s per shard, > %<min_shard_size>s).",
             median_shard_size: ActiveSupport::NumberHelper.number_to_human_size(size),
             min: min_shard,
