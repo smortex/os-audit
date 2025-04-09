@@ -116,10 +116,13 @@ index_list.group_names.each do |group_name|
   group_indices = OpenSearch::Audit::IndexGroup.new(index_list.where(group_name: group_name))
 
   trends = [14, 7].map do |n|
+    next unless group_indices.count > 2 * n
+
     format("%<trend>9s (last %<n>d)",
       trend: ActiveSupport::NumberHelper.number_to_human_size(group_indices.median_shard_size_trend(n)),
       n: n)
-  end.join(", ")
+  end.compact.join(", ")
+  trends = "n/a" if trends.empty?
   puts format("%<count>4d x %<name>-#{index_list.longest_index_name}s %<median_primary_size>9s [primary shards: %<primary_shard_count>2d, min: %<min>9s max: %<max>9s, med: %<med>9s, trends: %<trends>s]\n",
     count: group_indices.count,
     name: group_name,
