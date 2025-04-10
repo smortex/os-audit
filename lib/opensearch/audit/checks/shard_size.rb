@@ -46,10 +46,19 @@ OpenSearch::Audit.add_check(:shard_size) do
 
     if from_periodicity || indices.daily? && size < options[:min_shard_size]
       from_periodicity ||= "daily"
-      to_periodicity = "monthly"
-      size *= 30
+      if 7 * size > options[:min_shard_size]
+        to_periodicity = "weekly"
+        size *= 7
 
-      suggest_different_periodicity(from_periodicity, to_periodicity, size)
+        suggest_different_periodicity(from_periodicity, to_periodicity, size)
+      end
+
+      if 30 * size > options[:min_shard_size]
+        to_periodicity = "monthly"
+        size *= 30
+
+        suggest_different_periodicity(from_periodicity, to_periodicity, size)
+      end
     end
 
     if from_periodicity || indices.monthly? && size < options[:min_shard_size]
