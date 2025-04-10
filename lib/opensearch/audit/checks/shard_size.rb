@@ -8,6 +8,12 @@ OpenSearch::Audit.add_check(:shard_size) do
         next
       end
 
+      unique_primary_shards = indices.primary_shards.uniq
+
+      if unique_primary_shards.count > 1
+        logger.warn "Not all indices in group #{group_name} have the same number of primary shards: found #{unique_primary_shards.inspect}"
+      end
+
       if indices.median_shard_size < options[:min_shard_size]
         logger.warn format("Shards in group %<group_name>s are too small (%<size>s < %<ref>s).  Consider reducing the number of shards per index or merging indices.",
           group_name: group_name,
