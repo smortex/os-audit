@@ -3,6 +3,8 @@ require "opensearch/audit/index_group"
 require "opensearch/audit/index_list"
 require "opensearch/audit/checks/base"
 
+require "active_support/inflector"
+
 module OpenSearch
   module Audit
     def self.add_check(name, &block)
@@ -11,6 +13,8 @@ module OpenSearch
       klass = Class.new(OpenSearch::Audit::Checks::Base)
       klass.class_exec(&block)
       @checks[name] = klass
+
+      Checks.const_set(name.to_s.classify, klass)
     end
 
     def self.available_checks

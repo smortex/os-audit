@@ -1,6 +1,6 @@
 require "spec_helper"
 
-RSpec.describe OpenSearch::Audit::Checks::Conflicts do
+RSpec.describe OpenSearch::Audit::Checks::Conflict do
   describe "#diff" do
     subject do
       described_class.new(nil).diff(left, right)

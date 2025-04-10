@@ -1,27 +1,3 @@
-module OpenSearch::Audit::Checks::UnexpectedType
-  class Offense
-    attr_reader :field, :actual
-
-    def initialize(field, actual, expected)
-      @field = field
-      @actual = actual
-      @expected = expected
-    end
-
-    def expected
-      if @expected.count > 1
-        "one of #{@expected.join(", ")}"
-      else
-        @expected.first
-      end
-    end
-
-    def to_s
-      "Field #{field} is of type #{actual} but should be #{expected}"
-    end
-  end
-end
-
 OpenSearch::Audit.add_check(:unexpected_type) do
   def check
     @index_list.each do |index|
@@ -58,5 +34,27 @@ OpenSearch::Audit.add_check(:unexpected_type) do
     end
 
     result
+  end
+end
+
+module OpenSearch::Audit::Checks::UnexpectedType::Offense
+  attr_reader :field, :actual
+
+  def initialize(field, actual, expected)
+    @field = field
+    @actual = actual
+    @expected = expected
+  end
+
+  def expected
+    if @expected.count > 1
+      "one of #{@expected.join(", ")}"
+    else
+      @expected.first
+    end
+  end
+
+  def to_s
+    "Field #{field} is of type #{actual} but should be #{expected}"
   end
 end
