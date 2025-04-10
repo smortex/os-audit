@@ -37,7 +37,7 @@ OpenSearch::Audit.add_check(:unexpected_type) do
   end
 end
 
-module OpenSearch::Audit::Checks::UnexpectedType::Offense
+class OpenSearch::Audit::Checks::UnexpectedType::Offense
   attr_reader :field, :actual
 
   def initialize(field, actual, expected)

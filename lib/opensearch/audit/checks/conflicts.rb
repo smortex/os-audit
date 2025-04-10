@@ -1,7 +1,7 @@
 OpenSearch::Audit.add_check(:conflicts) do
   def check
     @index_list.base_names.each do |base_name|
-      group_indices = OpenSearch::Audit::IndexGroup.new(@index_list.where(base_name: base_name))
+      group_indices = OpenSearch::Audit::IndexList.new(@index_list.where(base_name: base_name))
 
       common_mapping = {}
       group_indices.each do |index|

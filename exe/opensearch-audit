@@ -113,7 +113,7 @@ end
 
 puts "Found index groups:"
 index_list.group_names.each do |group_name|
-  group_indices = OpenSearch::Audit::IndexGroup.new(index_list.where(group_name: group_name))
+  group_indices = OpenSearch::Audit::IndexList.new(index_list.where(group_name: group_name))
 
   trends = [14, 7].map do |n|
     next unless group_indices.count > 2 * n
