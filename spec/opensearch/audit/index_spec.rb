@@ -51,6 +51,7 @@ RSpec.describe OpenSearch::Audit::Index do
     {
       ".samplerr-2024" => true,
       ".samplerr-2025.02" => false,
+      ".samplerr-2025.15" => false,
       "dej418" => false,
       "logs-2025-03-21" => false,
       "logs-2025.03.21" => false,
@@ -79,6 +80,35 @@ RSpec.describe OpenSearch::Audit::Index do
     {
       ".samplerr-2024" => false,
       ".samplerr-2025.02" => true,
+      ".samplerr-2025.15" => false,
+      "dej418" => false,
+      "logs-2025-03-21" => false,
+      "logs-2025.03.21" => false,
+      "logs-2025.03.21.12" => false,
+      "top_queries-2025.04.01-51422" => false
+    }.each do |index_name, expected_result|
+      context "with index #{index_name}" do
+        let(:index_name) { index_name }
+
+        if expected_result
+          it { is_expected.to be_truthy }
+        else
+          it { is_expected.to be_falsey }
+        end
+      end
+    end
+  end
+  describe "#weekly?" do
+    subject { described_class.new(index).weekly? }
+
+    let(:index) do
+      {"index" => index_name, "pri.store.size" => "0", "pri" => "1"}
+    end
+
+    {
+      ".samplerr-2024" => false,
+      ".samplerr-2025.02" => true,
+      ".samplerr-2025.15" => true,
       "dej418" => false,
       "logs-2025-03-21" => false,
       "logs-2025.03.21" => false,
@@ -107,6 +137,7 @@ RSpec.describe OpenSearch::Audit::Index do
     {
       ".samplerr-2024" => false,
       ".samplerr-2025.02" => false,
+      ".samplerr-2025.15" => false,
       "dej418" => false,
       "logs-2025-03-21" => true,
       "logs-2025.03.21" => true,
@@ -135,6 +166,7 @@ RSpec.describe OpenSearch::Audit::Index do
     {
       ".samplerr-2024" => false,
       ".samplerr-2025.02" => false,
+      ".samplerr-2025.15" => false,
       "dej418" => false,
       "logs-2025-03-21" => false,
       "logs-2025.03.21" => false,

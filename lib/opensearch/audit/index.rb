@@ -54,7 +54,11 @@ module OpenSearch
       end
 
       def monthly?
-        name =~ /-\d{4}([.-])\d{2}(-\d{5,})?\z/
+        name =~ /-\d{4}[.-](?<month>\d{2})(?:-\d{5,})?\z/ && (1..12).cover?(Integer(Regexp.last_match(:month)))
+      end
+
+      def weekly?
+        name =~ /-\d{4}[.-](?<week>\d{2})(?:-\d{5,})?\z/ && (1..53).cover?(Integer(Regexp.last_match(:week)))
       end
 
       def daily?

@@ -10,6 +10,10 @@ module OpenSearch
           @indices.all?(&:monthly?)
         end
 
+        def weekly?
+          @indices.all?(&:weekly?)
+        end
+
         def daily?
           @indices.all?(&:daily?)
         end
