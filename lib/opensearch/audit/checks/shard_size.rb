@@ -27,48 +27,52 @@ OpenSearch::Audit.add_check(:shard_size) do
           size: ActiveSupport::NumberHelper.number_to_human_size(indices.median_shard_size),
           ref: ActiveSupport::NumberHelper.number_to_human_size(options[:max_shard_size]))
 
-        suggest_optimal_shards(indices.median_primary_size)
+        suggest_optimal_shards_for(indices.median_primary_size)
       end
     end
   end
 
   def suggest_larger_indices(indices)
-    running = false
     size = indices.median_shard_size
     from_periodicity = nil
-    to_periodicity = nil
 
     if indices.hourly? && size < options[:min_shard_size]
       from_periodicity ||= "hourly"
       to_periodicity = "daily"
       size *= 24
+
+      suggest_different_periodicity(from_periodicity, to_periodicity, size)
     end
 
-    if (from_periodicity || indices.daily?) && size < options[:min_shard_size]
+    if from_periodicity || indices.daily? && size < options[:min_shard_size]
       from_periodicity ||= "daily"
       to_periodicity = "monthly"
       size *= 30
+
+      suggest_different_periodicity(from_periodicity, to_periodicity, size)
     end
 
-    if (running || indices.monthly?) && size < options[:min_shard_size]
+    if from_periodicity || indices.monthly? && size < options[:min_shard_size]
       from_periodicity ||= "monthly"
       to_periodicity = "yearly"
       size *= 12
-    end
 
-    if to_periodicity
-      logger.warn "\tMerge these #{from_periodicity} indices into #{to_periodicity} ones: expected index size: #{ActiveSupport::NumberHelper.number_to_human_size(size)}"
-      suggest_optimal_shards(size)
+      suggest_different_periodicity(from_periodicity, to_periodicity, size)
     end
   end
 
-  def suggest_optimal_shards(size)
+  def suggest_different_periodicity(from_periodicity, to_periodicity, new_size)
+    logger.warn "\tMerge these #{from_periodicity} indices into #{to_periodicity} ones: expected index size: #{ActiveSupport::NumberHelper.number_to_human_size(new_size)}"
+    suggest_optimal_shards_for(new_size)
+  end
+
+  def suggest_optimal_shards_for(size)
     min_shard = optimal_min_shard_count_for(size)
     max_shard = optimal_max_shard_count_for(size)
 
     return if max_shard.zero?
 
-    logger.warn format("\tOptimal number of shards for %<median_shard_size>s indices: %<min>d (%<min_shard_shard_size>s per shard, < %<max_shard_size>s) to %<max>d (%<max_shard_shard_size>s per shard, > %<min_shard_size>s).",
+    logger.warn format("\tRecommended number of shards for %<median_shard_size>s indices: %<min>d (%<min_shard_shard_size>s per shard, < %<max_shard_size>s) to %<max>d (%<max_shard_shard_size>s per shard, > %<min_shard_size>s).",
       median_shard_size: ActiveSupport::NumberHelper.number_to_human_size(size),
       min: min_shard,
       min_shard_shard_size: ActiveSupport::NumberHelper.number_to_human_size(size / min_shard),
