@@ -23,11 +23,11 @@ module OpenSearch
         end
 
         def where(filters)
-          @indices.select do |index|
+          self.class.new(client: client, options: options, indices: @indices.select do |index|
             filters.all? do |k, v|
               index.send(k) == v
             end
-          end
+          end)
         end
 
         def find_by(filters)

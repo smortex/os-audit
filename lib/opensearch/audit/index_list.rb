@@ -9,14 +9,30 @@ module OpenSearch
       include OpenSearch::Audit::IndexList::Math
       include OpenSearch::Audit::IndexList::Periodicity
 
-      attr_reader :longest_index_name
+      attr_reader :client, :longest_index_name, :index_pattern, :options
 
-      def initialize(indices = [])
+      def initialize(client:, options:, indices: [], index_pattern: nil)
+        if index_pattern.nil? && indices.empty?
+          raise "Must provide indices or match"
+        end
+
+        @client = client
+        @options = options
         @indices = indices
+        @index_pattern = index_pattern
         @longest_index_name = 0
+
+        if index_pattern
+          client.cat.indices(index: index_pattern, format: "json", bytes: "b", s: "index").map do |index_data|
+            index = OpenSearch::Audit::Index.new(index_data)
+            next if options[:periodic] && !index.periodic?
+
+            add_index(index)
+          end
+        end
       end
 
-      def add(index)
+      def add_index(index)
         @indices << index
         @longest_index_name = [@longest_index_name, index.name.length].max
       end

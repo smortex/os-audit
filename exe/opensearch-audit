@@ -100,20 +100,13 @@ if options[:max_shard_size] < options[:min_shard_size]
   exit 1
 end
 
-index_param = ARGV.first || "_all"
+index_pattern = ARGV.first || "_all"
 
-index_list = OpenSearch::Audit::IndexList.new
-
-cli.client.cat.indices(index: index_param, format: "json", bytes: "b", s: "index").map do |index_data|
-  index = OpenSearch::Audit::Index.new(index_data)
-  next if options[:periodic] && !index.periodic?
-
-  index_list.add(index)
-end
+index_list = OpenSearch::Audit::IndexList.new(client: cli.client, options: options, index_pattern: index_pattern)
 
 puts "Found index groups:"
 index_list.group_names.each do |group_name|
-  group_indices = OpenSearch::Audit::IndexList.new(index_list.where(group_name: group_name))
+  group_indices = index_list.where(group_name: group_name)
 
   trends = [14, 7].map do |n|
     next unless group_indices.count > 2 * n
@@ -134,7 +127,7 @@ index_list.group_names.each do |group_name|
     trends: trends)
 end
 
-mappings = cli.client.indices.get_mapping(index: index_param)
+mappings = cli.client.indices.get_mapping(index: index_pattern)
 mappings.each do |index, mapping|
   index_list.enrich(index, :mapping, mapping)
 end

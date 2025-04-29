@@ -1,7 +1,7 @@
 OpenSearch::Audit.add_check(:shard_size) do
   def check
     @index_list.group_names.each do |group_name|
-      indices = OpenSearch::Audit::IndexList.new(@index_list.where(group_name: group_name))
+      indices = @index_list.where(group_name: group_name)
 
       if indices.count < 2
         logger.info "Not enough indices in group #{group_name} to check shard size"
