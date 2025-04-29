@@ -2,6 +2,7 @@
 
 require "active_support"
 require "active_support/core_ext/numeric/bytes"
+require "faraday/net_http_persistent"
 require "logger"
 require "opensearch/audit"
 require "opensearch/cli"
