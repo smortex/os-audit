@@ -1,0 +1,1 @@
+{"took":14096,"timed_out":false,"_shards":{"total":365,"successful":365,"skipped":0,"failed":0},"hits":{"total":{"value":10000,"relation":"gte"},"max_score":null,"hits":[]},"aggregations":{"result":{"doc_count_error_upper_bound":0,"sum_other_doc_count":0,"buckets":[{"key":"true","doc_count":32353922}]}}}

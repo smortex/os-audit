@@ -16,7 +16,9 @@ options = {
   logger: logger,
   periodic: false,
   min_shard_size: 10.gigabytes,
-  max_shard_size: 50.gigabytes
+  max_shard_size: 50.gigabytes,
+  template: {},
+  template_filename: nil
 }
 
 def parse_bytes(s)
@@ -86,6 +88,19 @@ cli = OpenSearch::CLI.new do |opts|
   opts.on("--max-shard-size=SIZE", "Set the maximum size of shards") do |size|
     options[:max_shard_size] = parse_bytes(size)
   end
+
+  opts.on("--template=FILENAME", "Update index template to replace dynamic mappings with static ones") do |filename|
+    options[:template_filename] = filename
+    begin
+      options[:template] = JSON.parse(File.read(options[:template_filename]))
+    rescue Errno::ENOENT
+      options[:template] = {
+        "template" => {
+          "mappings" => {}
+        }
+      }
+    end
+  end
 end
 
 cli.load
@@ -134,3 +149,17 @@ mappings.each do |index, mapping|
 end
 
 OpenSearch::Audit.run_enabled_checks(index_list, options)
+
+def sort_hash(subject)
+  if subject.is_a?(Hash)
+    subject.keys.sort.map { |key| [key, sort_hash(subject[key])] }.to_h
+  elsif subject.is_a?(Array)
+    subject.map { |item| sort_hash(item) }
+  else
+    subject
+  end
+end
+
+if options[:template_filename]
+  File.write(options[:template_filename], "#{JSON.pretty_generate(sort_hash(options[:template]))}\n")
+end

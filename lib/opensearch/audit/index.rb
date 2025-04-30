@@ -1,6 +1,8 @@
 module OpenSearch
   module Audit
     class Index
+      DEFAULT_MAPPING = {"type" => "text", "fields" => {"keyword" => {"type" => "keyword", "ignore_above" => 256}}}
+
       attr_reader :name, :shard_size, :primary_size, :pri
 
       def initialize(index)
